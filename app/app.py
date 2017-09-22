@@ -265,7 +265,7 @@ def metrics(environ, start_response):
             port_name = vc_port.find('port-name').text.strip()
             #neighbor_port_name = vc_port.find('neighbor-interface').text.strip()
             #registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'neighbor-id': neighbor_id, 'port-name': port_name, 'neighbor-port': neighbor_port_name})
-            registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'port-name': port_name})
+            registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'portName': port_name})
 
 
     # routing engine data
