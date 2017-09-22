@@ -1,0 +1,19 @@
+# Systemd Service Script for Production Deployment
+
+[Unit]
+Description=Junos Exporter Docker Container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+
+WorkingDirectory=/opt/junos_exporter
+
+ExecStart=/usr/bin/docker-compose -f docker-compose.yml up
+ExecStop=/usr/bin/docker-compose -f docker-compose.yml down
+
+User=prometheus
+
+[Install]
+WantedBy=multi-user.target
