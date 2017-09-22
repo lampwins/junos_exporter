@@ -96,9 +96,9 @@ def metrics(environ, start_response):
 
     parameters = parse_qs(environ.get('QUERY_STRING', ''))
 
-    profile = config[parameters['profile'][0]]
+    profile = config[parameters['module'][0]]
 
-    dev = Device(host=parameters['instance'][0], user=profile['auth']['username'], password=profile['auth']['password'])
+    dev = Device(host=parameters['target'][0], user=profile['auth']['username'], password=profile['auth']['password'])
     dev.open()
     interface_information = dev.rpc.get_interface_information(extensive=True)
 
