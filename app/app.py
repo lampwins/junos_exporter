@@ -261,10 +261,12 @@ def metrics(environ, start_response):
 
             status_text = vc_port.find('port-status').text.strip()
             status = 1.0 if status_text == 'Up' else 0.0
-            neighbor_id = vc_port.find('neighbor-id').text.strip()
+            #neighbor_id = vc_port.find('neighbor-id').text.strip()
             port_name = vc_port.find('port-name').text.strip()
-            neighbor_port_name = vc_port.find('neighbor-interface').text.strip()
-            registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'neighbor-id': neighbor_id, 'port-name': port_name, 'neighbor-port': neighbor_port_name})
+            #neighbor_port_name = vc_port.find('neighbor-interface').text.strip()
+            #registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'neighbor-id': neighbor_id, 'port-name': port_name, 'neighbor-port': neighbor_port_name})
+            registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'port-name': port_name})
+
 
     # routing engine data
     route_engines = dev.rpc.get_route_engine_information()
