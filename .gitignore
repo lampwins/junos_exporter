@@ -1,2 +1,3 @@
 .vscode
 junos_exporter.yaml
+*.pyc
