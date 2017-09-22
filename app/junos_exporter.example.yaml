@@ -1,0 +1,6 @@
+---
+default:
+  auth:
+    method: password
+    username: username
+    password: password
