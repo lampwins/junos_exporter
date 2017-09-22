@@ -23,7 +23,6 @@ COPY requirements.txt .
 RUN pip3 install --upgrade pip \
   && pip3 install -r requirements.txt
 
-COPY logging.conf /logging.conf
 COPY gunicorn.conf /gunicorn.conf
 
 COPY app.py .
