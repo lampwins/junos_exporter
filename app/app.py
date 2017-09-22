@@ -235,7 +235,7 @@ def metrics(environ, start_response):
     vc_information = dev.rpc.get_virtual_chassis_information()
 
     # register virtual chassis metrics
-    registry.register('virtualChassisMemberStatus', 'gauage')
+    registry.register('virtualChassisMemberStatus', 'gauge')
 
     for vc_member in vc_information.findall('member-list/member'):
 
@@ -251,7 +251,7 @@ def metrics(environ, start_response):
     vc_port_information = dev.rpc.get_virtual_chassis_port_information()
 
     # register virtual chassis port metrics
-    registry.register('virtualChassisPortStatus', 'gauage')
+    registry.register('virtualChassisPortStatus', 'gauge')
 
     for fpc in vc_port_information.findall('multi-routing-engine-item'):
 
@@ -272,10 +272,10 @@ def metrics(environ, start_response):
     route_engines = dev.rpc.get_route_engine_information()
 
     # register virtual chassis port metrics
-    registry.register('cpuUsage', 'gauage')
+    registry.register('cpuUsage', 'gauge')
     registry.register('memoryUsage', 'gauge')
     registry.register('cpuTemp', 'gauge')
-    registry.register('chassisTemp', 'gauage')
+    registry.register('chassisTemp', 'gauge')
     registry.register('startTime', 'gauge')
     registry.register('upTime', 'gauge')
 
