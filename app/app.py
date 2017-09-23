@@ -65,7 +65,7 @@ class Metrics(object):
         for name, metric_type in self._metric_types.items():
             lines.append("# TYPE {} {}".format(name, metric_type))
             lines.extend(self._metrics_registry[name])
-        return "\n".join([str(x) for x in lines])
+        return "\n".join([str(x) for x in lines]) + '\n'
 
 
 def hello(environ, start_response):
