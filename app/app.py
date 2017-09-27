@@ -254,10 +254,18 @@ def get_virtual_chassis_metrics(registry, dev):
 
         status_text = vc_member.find('member-status').text.strip()
         status = 1.0 if status_text == 'Prsnt' else 0.0
-        serial = vc_member.find('member-serial-number').text.strip()
-        model = vc_member.find('member-model').text.strip()
+        serial = vc_member.find('member-serial-number').text
+        if serial is not None:
+            serial = serial.strip()
+        else:
+            serial = "unknown"
+        model = vc_member.find('member-model').text
         member_id = vc_member.find('member-id').text.strip()
-        role = vc_member.find('member-role').text.strip()
+        role = vc_member.find('member-role')
+        if role is not None:
+            role = role.text.strip()
+        else:
+            role = "unknown"
         registry.add_metric('virtualChassisMemberStatus', status, {'status': status_text, 'serial': serial, 'model': model, 'id': member_id, 'role': role})
 
     # virtual chassis ports
@@ -302,12 +310,14 @@ def get_route_engine_metrics(registry, dev):
         fpc = route_engine.find('slot').text.strip()
 
         # temp
-        temp_f = route_engine.find('temperature').text.strip().split('/')[1].split(' ')[1]
-        registry.add_metric('chassisTemp', route_engine.find('temperature').attrib['celsius'], {'fpc': fpc, 'fahrenheit': temp_f})
+        temp_element = route_engine.find('temperature')
+        if temp_element is not None:
+            temp_f = temp_element.text.strip().split('/')[1].split(' ')[1]
+            registry.add_metric('chassisTemp', temp_element.attrib['celsius'], {'fpc': fpc, 'fahrenheit': temp_f})
 
-        # cpu temp
-        temp_f = route_engine.find('cpu-temperature').text.strip().split('/')[1].split(' ')[1]
-        registry.add_metric('cpuTemp', route_engine.find('cpu-temperature').attrib['celsius'], {'fpc': fpc, 'fahrenheit': temp_f})
+            # cpu temp
+            temp_f = route_engine.find('cpu-temperature').text.strip().split('/')[1].split(' ')[1]
+            registry.add_metric('cpuTemp', route_engine.find('cpu-temperature').attrib['celsius'], {'fpc': fpc, 'fahrenheit': temp_f})
 
         # cpu
         cpu_user = route_engine.find('cpu-user').text.strip()

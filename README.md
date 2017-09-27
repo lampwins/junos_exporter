@@ -17,11 +17,10 @@ git clone https://github.com/lampwins/junos_exporter /opt/junos_exporter
 ```
 cp junos_exporter.example.yaml /etc/junos_exporter/junos_exporter.yaml
 ```
-3. (For systemd boxes) Copy systemd service. For non systemd, good luck.
+3. (For systemd boxes) Copy systemd service. For non systemd, good luck. Note that the service is set to run as the `prometheus` user.
 ```
 cp ./extras/junos_exporter.service /etc/systemd/system/junos_exporter.service
 ```
-Note: The service is set to run as the `prometheus` user.
 4. Load, enable and start the service
 ```
 systemctl daemon-reload
