@@ -89,20 +89,13 @@ def not_found(environ, start_response):
     return [bytes('Not Found', 'utf-8')]
 
 
-def metrics(environ, start_response):
+def get_interface_metrics(registry, dev):
+    """
+    Get interface metrics
+    """
 
-    with open('junos_exporter.yaml', 'r') as f:
-        config = yaml.load(f)
-
-    parameters = parse_qs(environ.get('QUERY_STRING', ''))
-
-    profile = config[parameters['module'][0]]
-
-    dev = Device(host=parameters['target'][0], user=profile['auth']['username'], password=profile['auth']['password'])
-    dev.open()
+    # interfaces
     interface_information = dev.rpc.get_interface_information(extensive=True)
-
-    registry = Metrics()
 
     # register interface metrics
     registry.register('ifaceInputBps', 'gauge')
@@ -113,6 +106,7 @@ def metrics(environ, start_response):
     registry.register('ifaceOutputErrors', 'gauge')
     registry.register('ifaceInputDrops', 'gauge')
     registry.register('ifaceOutputDrops', 'gauge')
+    registry.register('ifaceCarrierTransitions', 'gauge')
     registry.register('ifaceUp', 'gauge')
 
     # interface metics
@@ -183,6 +177,13 @@ def metrics(environ, start_response):
         else:
             registry.add_metric('ifaceOutputDrops', 0.0, {'ifName': interface_name})
 
+        # output carrier transitions
+        output_carrier_transitions = interface.find('output-error-list/carrier-transitions')
+        if output_drops is not None:
+            registry.add_metric('ifaceCarrierTransitions', output_carrier_transitions.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceCarrierTransitions', 0.0, {'ifName': interface_name})
+
         # logical interfaces
         for logical_interface in interface.findall('logical-interface'):
 
@@ -218,6 +219,12 @@ def metrics(environ, start_response):
             else:
                 registry.add_metric('ifaceOutputBytes', 0.0, {'ifName': logical_interface_name, 'transit': 1})
 
+
+def get_environment_metrics(registry, dev):
+    """
+    Get environment metrics
+    """
+
     # envornment
     environment_information = dev.rpc.get_environment_information()
 
@@ -231,7 +238,13 @@ def metrics(environ, start_response):
         _class = env_item.find('class').text.strip()
         registry.add_metric('environmentItem', status, {'name': name, 'class': _class})
 
-    # virtual chassis
+
+def get_virtual_chassis_metrics(registry, dev):
+    """
+    Get virtual chassis metrics
+    """
+
+        # virtual chassis
     vc_information = dev.rpc.get_virtual_chassis_information()
 
     # register virtual chassis metrics
@@ -267,6 +280,11 @@ def metrics(environ, start_response):
             #registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'neighbor-id': neighbor_id, 'port-name': port_name, 'neighbor-port': neighbor_port_name})
             registry.add_metric('virtualChassisPortStatus', status, {'fpc': fpc_name, 'status': status_text, 'portName': port_name})
 
+
+def get_route_engine_metrics(registry, dev):
+    """
+    Get Routing engine metrics
+    """
 
     # routing engine data
     route_engines = dev.rpc.get_route_engine_information()
@@ -312,6 +330,67 @@ def metrics(environ, start_response):
         registry.add_metric('startTime', route_engine.find('start-time').attrib['seconds'], {'fpc': fpc})
         registry.add_metric('upTime', route_engine.find('up-time').attrib['seconds'], {'fpc': fpc})
 
+
+def get_storage_metrics(registry, dev):
+    """
+    Get system storage metrics
+    """
+
+    # storage data
+    multi_routing_engine_results = dev.rpc.get_system_storage()
+
+    # register virtual chassis port metrics
+    registry.register('fileSystemBlocksTotal', 'gauge')
+    registry.register('fileSystemBlocksUsed', 'gauge')
+
+    for multi_routing_engine_item in multi_routing_engine_results.findall('multi-routing-engine-item'):
+
+        fpc = multi_routing_engine_item.find('re-name').text.strip()
+
+        for filesytem in multi_routing_engine_item.findall('system-storage-information/filesystem'):
+
+            filesystem_name = filesytem.find('filesystem-name').text.strip()
+            total_blocks = filesytem.find('total-blocks').text.strip()
+            used_blocks = filesytem.find('used-blocks').text.strip()
+            mount_point = filesytem.find('mounted-on').text.strip()
+
+            registry.add_metric('fileSystemBlocksTotal', total_blocks, {'fpc': fpc, 'filesystem': filesystem_name, 'mountpoint': mount_point})
+            registry.add_metric('fileSystemBlocksUsed', used_blocks, {'fpc': fpc, 'filesystem': filesystem_name, 'mountpoint': mount_point})
+
+
+def metrics(environ, start_response):
+
+    # load config file
+    with open('junos_exporter.yaml', 'r') as f:
+        config = yaml.load(f)
+
+    # parameters from url
+    parameters = parse_qs(environ.get('QUERY_STRING', ''))
+
+    # get profile from config
+    profile = config[parameters['module'][0]]
+
+    # open device connection
+    dev = Device(host=parameters['target'][0], user=profile['auth']['username'], password=profile['auth']['password'])
+    dev.open()
+
+    # create metrics registry
+    registry = Metrics()
+
+    # get and parse metrics
+    types = profile['metrics']
+    if 'interface' in types:
+        get_interface_metrics(registry, dev)
+    if 'environment' in types:
+        get_environment_metrics(registry, dev)
+    if 'virtual_chassis' in types:
+        get_virtual_chassis_metrics(registry, dev)
+    if 'routing_engine' in types:
+        get_route_engine_metrics(registry, dev)
+    if 'storage' in types:
+        get_storage_metrics(registry, dev)
+
+    # start response
     data = registry.collect()
     status = '200 OK'
     response_headers = [
