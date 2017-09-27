@@ -1,0 +1,12 @@
+---
+default:
+  auth:
+    method: password
+    username: username
+    password: password
+  metrics:
+    - interface
+    - virtual_chassis
+    - routing_engine
+    - environment
+    - storage

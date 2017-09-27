@@ -26,8 +26,4 @@ RUN pip3 install --upgrade pip \
 COPY gunicorn.conf /gunicorn.conf
 
 COPY app.py .
-COPY junos_exporter.yaml .
-
-#EXPOSE 9665
-
-#ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/gunicorn.conf", "--log-config", "/logging.conf", "-b", ":9665", "app:app"]
+#COPY junos_exporter.yaml .

@@ -3,16 +3,15 @@ server:
   image: nginx
   volumes:
     - ./server/conf.d:/etc/nginx/conf.d
-    - ./app/static:/app/static
   links:
     - web:web
   ports:
     - "9665:80"
 
 web:
-  extends:
-    file: docker-compose.base.yaml
-    service: web
+  image: lampwins/junos_exporter_web
+  volumes:
+    - /etc/junos_exporter.yaml:/junos_exporter.yaml
   expose:
     - "8000"
-  command: gunicorn app:app -b :8000 --name app --log-level=debug --log-file=- -w 4
+  command: gunicorn app:app -b :8000 --name app --log-level=debug --log-file=- -w 12 --max-requests 10 -k eventlet

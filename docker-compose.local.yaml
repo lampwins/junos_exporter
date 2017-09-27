@@ -1,7 +1,0 @@
-web:
-  extends:
-    file: docker-compose.base.yaml
-    service: web
-  ports:
-    - "80:5000"
-  command: python app.py
