@@ -307,17 +307,24 @@ def get_route_engine_metrics(registry, dev):
 
     for route_engine in route_engines.findall('route-engine'):
 
-        fpc = route_engine.find('slot').text.strip()
+        fpc = route_engine.find('slot')
+        if fpc is not None:
+            meta = {
+                'fpc': fpc.text.strip()
+            }
+        else:
+            # not fpc based
+            meta = {}
 
         # temp
         temp_element = route_engine.find('temperature')
         if temp_element is not None:
             temp_f = temp_element.text.strip().split('/')[1].split(' ')[1]
-            registry.add_metric('chassisTemp', temp_element.attrib['celsius'], {'fpc': fpc, 'fahrenheit': temp_f})
+            registry.add_metric('chassisTemp', temp_element.attrib['celsius'], {**meta, **{'fahrenheit': temp_f}})
 
             # cpu temp
             temp_f = route_engine.find('cpu-temperature').text.strip().split('/')[1].split(' ')[1]
-            registry.add_metric('cpuTemp', route_engine.find('cpu-temperature').attrib['celsius'], {'fpc': fpc, 'fahrenheit': temp_f})
+            registry.add_metric('cpuTemp', route_engine.find('cpu-temperature').attrib['celsius'], {**meta, **{'fahrenheit': temp_f}})
 
         # cpu
         cpu_user = route_engine.find('cpu-user').text.strip()
@@ -326,19 +333,19 @@ def get_route_engine_metrics(registry, dev):
         cpu_interrupt = route_engine.find('cpu-interrupt').text.strip()
         cpu_idle = route_engine.find('cpu-idle').text.strip()
 
-        registry.add_metric('cpuUsage', cpu_user, {'fpc': fpc, 'type': 'user'})
-        registry.add_metric('cpuUsage', cpu_background, {'fpc': fpc, 'type': 'background'})
-        registry.add_metric('cpuUsage', cpu_system, {'fpc': fpc, 'type': 'system'})
-        registry.add_metric('cpuUsage', cpu_interrupt, {'fpc': fpc, 'type': 'interrupt'})
-        registry.add_metric('cpuUsage', cpu_idle, {'fpc': fpc, 'type': 'idle'})
-        registry.add_metric('cpuUsage', int(cpu_user) + int(cpu_background) + int(cpu_system) + int(cpu_interrupt), {'fpc': fpc, 'type': 'total'})
+        registry.add_metric('cpuUsage', cpu_user, {**meta, **{'type': 'user'}})
+        registry.add_metric('cpuUsage', cpu_background, {**meta, **{'type': 'background'}})
+        registry.add_metric('cpuUsage', cpu_system, {**meta, **{'type': 'system'}})
+        registry.add_metric('cpuUsage', cpu_interrupt, {**meta, **{'type': 'interrupt'}})
+        registry.add_metric('cpuUsage', cpu_idle, {**meta, **{'type': 'idle'}})
+        registry.add_metric('cpuUsage', int(cpu_user) + int(cpu_background) + int(cpu_system) + int(cpu_interrupt), {**meta, **{'type': 'total'}})
 
         # memory
-        registry.add_metric('memoryUsage', route_engine.find('memory-buffer-utilization').text.strip(), {'fpc': fpc})
+        registry.add_metric('memoryUsage', route_engine.find('memory-buffer-utilization').text.strip(), meta)
 
         # time
-        registry.add_metric('startTime', route_engine.find('start-time').attrib['seconds'], {'fpc': fpc})
-        registry.add_metric('upTime', route_engine.find('up-time').attrib['seconds'], {'fpc': fpc})
+        registry.add_metric('startTime', route_engine.find('start-time').attrib['seconds'], meta)
+        registry.add_metric('upTime', route_engine.find('up-time').attrib['seconds'], meta)
 
 
 def get_storage_metrics(registry, dev):
@@ -368,6 +375,173 @@ def get_storage_metrics(registry, dev):
             registry.add_metric('fileSystemBlocksUsed', used_blocks, {'fpc': fpc, 'filesystem': filesystem_name, 'mountpoint': mount_point})
 
 
+def get_bgp_metrics(registry, dev):
+    """
+    Get BGP neighbor metrics
+    """
+
+    # Based on the order in which states are defined in the
+    # BGP FSA in RFC4271 section 8.2.2
+    _peer_state_values = {
+        'Idle': 1,
+        'Connect': 2,
+        'Active': 3,
+        'OpenSent': 4,
+        'OpenConfirm': 5,
+        'Established': 6
+    }
+
+    # bgp neighbor data
+    bgp_results = dev.rpc.get_bgp_neighbor_information()
+
+    # register bgp metrics
+    registry.register('bgpPeerCount', 'gauge')
+    registry.register('bgpPeerState', 'gauge')
+    registry.register('bgpPeerLastState', 'gauge')
+    registry.register('bgpPeerOptionHoldtime', 'gauge')
+    registry.register('bgpPeerOptionPreference', 'gauge')
+    registry.register('bgpPeerFlapCount', 'gauge')
+    registry.register('bgpPeerActivePrefixCount', 'gauge')
+    registry.register('bgpPeerReceivedPrefixCount', 'gauge')
+    registry.register('bgpPeerAcceptedPrefixCount', 'gauge')
+    registry.register('bgpPeerSuppressedPrefixCount', 'gauge')
+    registry.register('bgpPeerAdvertisedPrefixCount', 'gauge')
+    registry.register('bgpPeerLastReceived', 'gauge')
+    registry.register('bgpPeerLastSent', 'gauge')
+    registry.register('bgpPeerLastChecked', 'gauge')
+    registry.register('bgpPeerInputMessages', 'gauge')
+    registry.register('bgpPeerInputUpdates', 'gauge')
+    registry.register('bgpPeerInputRefreshes', 'gauge')
+    registry.register('bgpPeerInputOctets', 'gauge')
+    registry.register('bgpPeerOutputMessages', 'gauge')
+    registry.register('bgpPeerOutputUpdates', 'gauge')
+    registry.register('bgpPeerOutputRefreshes', 'gauge')
+    registry.register('bgpPeerOutputOctets', 'gauge')
+    registry.register('bgpErrorSendCount', 'gauge')
+    registry.register('bgpErrorReceiveCount', 'gauge')
+
+    peers = bgp_results.findall('bgp-peer')
+    registry.add_metric('bgpPeerCount', len(peers))
+
+    for peer in peers:
+
+        peer_address = peer.find('peer-address').text
+        peer_as = peer.find('peer-as').text
+        local_address = peer.find('local-address').text
+        local_as = peer.find('local-as').text
+        meta = {
+            'peerAddress': peer_address,
+            'localAddress': local_address,
+            'peerAS': peer_as,
+            'localAS': local_as 
+        }
+
+        peer_state_text = peer.find('peer-state').text
+        peer_state = _peer_state_values[peer_state_text]
+        last_state_text = peer.find('last-state').text
+        last_state = _peer_state_values[last_state_text]
+
+        # state metrics
+        registry.add_metric('bgpPeerState', peer_state, {**meta, **{'state': peer_state_text,'lastState': last_state_text}})
+        registry.add_metric('bgpPeerLastState', last_state, {**meta, **{'lastState': last_state_text, 'state': peer_state_text}})
+
+        # holdtime option
+        hold_time = peer.find('bgp-option-information/holdtime')
+        if hold_time is not None:
+            registry.add_metric('bgpPeerOptionHoldtime', hold_time.text, meta)
+
+        # preference option
+        preference = peer.find('bgp-option-information/preference')
+        if preference is not None:
+            registry.add_metric('bgpPeerOptionPreference', preference.text, meta)
+
+        # flap counts
+        flap_count = peer.find('flap-count')
+        last_flap_event = peer.find('last-flap-event')
+        if flap_count is not None:
+            if last_flap_event is not None:
+                registry.add_metric('bgpPeerFlapCount', flap_count.text, {**meta, **{'lastFlapEvent': last_flap_event.text}})
+            else:
+                registry.add_metric('bgpPeerFlapCount', flap_count.text, meta)
+
+        # rib metrics
+        for rib in peer.findall('bgp-rib'):
+
+            rib_name = rib.find('name').text
+            rib_meta = {'ribName': rib_name}
+            rib_meta = {**rib_meta, **meta}
+
+            active_prefix_count = rib.find('active-prefix-count').text
+            received_prefix_count = rib.find('received-prefix-count').text
+            accepted_prefix_count = rib.find('accepted-prefix-count').text
+            suppressed_prefix_count = rib.find('suppressed-prefix-count').text
+            advertised_prefix_count = rib.find('advertised-prefix-count').text
+
+            registry.add_metric('bgpPeerActivePrefixCount', active_prefix_count, rib_meta)
+            registry.add_metric('bgpPeerReceivedPrefixCount', received_prefix_count, rib_meta)
+            registry.add_metric('bgpPeerAcceptedPrefixCount', accepted_prefix_count, rib_meta)
+            registry.add_metric('bgpPeerSuppressedPrefixCount', suppressed_prefix_count, rib_meta)
+            registry.add_metric('bgpPeerAdvertisedPrefixCount', advertised_prefix_count, rib_meta)
+
+        # stats
+        last_received = peer.find('last-received')
+        if last_received is not None:
+            registry.add_metric('bgpPeerLastReceived', last_received.text, meta)
+
+        last_sent = peer.find('last-sent')
+        if last_sent is not None:
+            registry.add_metric('bgpPeerLastSent', last_sent.text, meta)
+
+        last_checked = peer.find('last-checked')
+        if last_checked is not None:
+            registry.add_metric('bgpPeerLastChecked', last_checked.text, meta)
+
+        input_messages = peer.find('input-messages')
+        if input_messages is not None:
+            registry.add_metric('bgpPeerInputMessages', input_messages.text, meta)
+
+        input_updates = peer.find('input-updates')
+        if input_updates is not None:
+            registry.add_metric('bgpPeerInputUpdates', input_updates.text, meta)
+
+        input_refreshes = peer.find('input-refreshes')
+        if input_refreshes is not None:
+            registry.add_metric('bgpPeerInputRefreshes', input_refreshes.text, meta)
+
+        input_octets = peer.find('input-octets')
+        if input_octets is not None:
+            registry.add_metric('bgpPeerInputOctets', input_octets.text, meta)
+
+        output_messages = peer.find('output-messages')
+        if output_messages is not None:
+            registry.add_metric('bgpPeerOutputMessages', output_messages.text, meta)
+
+        output_updates = peer.find('output-updates')
+        if output_updates is not None:
+            registry.add_metric('bgpPeerOutputUpdates', output_updates.text, meta)
+
+        output_refreshes = peer.find('output-refreshes')
+        if output_refreshes is not None:
+            registry.add_metric('bgpPeerOutputRefreshes', output_refreshes.text, meta)
+
+        output_octets = peer.find('output-octets')
+        if output_octets is not None:
+            registry.add_metric('bgpPeerOutputOctets', output_octets.text, meta)
+
+        # errors
+        for error in peer.findall('bgp-error'):
+
+            error_name = error.find('name').text
+            error_meta = {'errorName': error_name}
+            error_meta = {**error_meta, **meta}
+
+            send_count = error.find('send-count').text
+            receive_count = error.find('receive-count').text
+
+            registry.add_metric('bgpErrorSendCount', send_count, error_meta)
+            registry.add_metric('bgpErrorReceiveCount', receive_count, error_meta)
+
+
 def metrics(environ, start_response):
 
     # load config file
@@ -381,7 +555,17 @@ def metrics(environ, start_response):
     profile = config[parameters['module'][0]]
 
     # open device connection
-    dev = Device(host=parameters['target'][0], user=profile['auth']['username'], password=profile['auth']['password'])
+    if profile['auth']['method'] == 'password':
+        # using regular username/password
+        dev = Device(host=parameters['target'][0],
+                     user=profile['auth']['username'],
+                     password=profile['auth']['password'])
+    elif profile['auth']['method'] == 'ssh_key':
+        # using ssh key
+        dev = Device(host=parameters['target'][0],
+                     user=profile['auth']['username'],
+                     password=profile['auth'].get('password'),
+                     ssh_private_key_file='./ssh_private_key_file')
     dev.open()
 
     # create metrics registry
@@ -399,6 +583,8 @@ def metrics(environ, start_response):
         get_route_engine_metrics(registry, dev)
     if 'storage' in types:
         get_storage_metrics(registry, dev)
+    if 'bgp' in types:
+        get_bgp_metrics(registry, dev)
 
     # start response
     data = registry.collect()

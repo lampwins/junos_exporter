@@ -10,8 +10,8 @@ Restart=always
 
 WorkingDirectory=/opt/junos_exporter
 
-ExecStart=/usr/bin/docker-compose -f docker-compose.yaml up
-ExecStop=/usr/bin/docker-compose -f docker-compose.yaml down
+ExecStart=/usr/local/bin/docker-compose -f docker-compose.yaml up
+ExecStop=/usr/local/bin/docker-compose -f docker-compose.yaml down
 
 User=prometheus
 
