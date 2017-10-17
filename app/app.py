@@ -555,7 +555,17 @@ def metrics(environ, start_response):
     profile = config[parameters['module'][0]]
 
     # open device connection
-    dev = Device(host=parameters['target'][0], user=profile['auth']['username'], password=profile['auth']['password'])
+    if profile['auth']['method'] == 'password':
+        # using regular username/password
+        dev = Device(host=parameters['target'][0],
+                     user=profile['auth']['username'],
+                     password=profile['auth']['password'])
+    elif profile['auth']['method'] == 'ssh_key':
+        # using ssh key
+        dev = Device(host=parameters['target'][0],
+                     user=profile['auth']['username'],
+                     password=profile['auth'].get('password'),
+                     ssh_private_key_file='./ssh_private_key_file')
     dev.open()
 
     # create metrics registry

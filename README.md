@@ -49,6 +49,7 @@ default:
 The top level element(s) defines the name of the module you are creating. That is to say, you can creat many modules to meet varrying authentication and metric collection needs on your network. Each module must contain two sub elements:
 
 The `auth` section specifies how to authenticate to the device. `method` can be either `password` or `ssh_key` (not yet implemented). With `password`, supply the `username` and `password` for a user that has rights on the device to login and run "show" rpc's.
+With `ssh_key`, you need only supply the `username` for the user configured with the public key on the devices that use this module. You may also pass the optional key passphrase in `password`.Note that the private key must be stored in the keystore for the `prometheus` user `/home/prometheus/.ssh/junos_exporter/id_rsa`. Remeber to lock this file down to just the prometheus user if you are placing the key manually.
 
 The `metrics` section list all of the metric types that this module will collect. Each one is described below:
 - `interface`: Per interface up/down, input/output bps, input/output bytes, input/output errors, carrier transitions. RPC's:
