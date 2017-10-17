@@ -12,7 +12,7 @@ web:
   image: lampwins/junos_exporter_web
   volumes:
     - /etc/junos_exporter/junos_exporter.yaml:/junos_exporter.yaml
-    - /home/prometheus/.ssh/junos_exporter/id_rsa
+    - /home/prometheus/.ssh/junos_exporter/id_rsa:/ssh_private_key_file
   expose:
     - "8000"
   command: gunicorn app:app -b :8000 --name app --log-level=debug --log-file=- -w 12 --max-requests 10 -k eventlet
