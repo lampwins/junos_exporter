@@ -9,6 +9,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+config = None
+
 
 class Metrics(object):
     """
@@ -235,8 +237,12 @@ def get_environment_metrics(registry, dev):
 
         status = 1.0 if env_item.find('status').text.strip() == 'OK' else 0.0
         name = env_item.find('name').text.strip()
-        _class = env_item.find('class').text.strip()
-        registry.add_metric('environmentItem', status, {'name': name, 'class': _class})
+        _class = env_item.find('class')
+        if _class is not None:
+            _class = _class.text.strip()
+            registry.add_metric('environmentItem', status, {'name': name, 'class': _class})
+        else:
+            registry.add_metric('environmentItem', status, {'name': name})
 
 
 def get_virtual_chassis_metrics(registry, dev):
@@ -544,7 +550,7 @@ def get_bgp_metrics(registry, dev):
 
 def metrics(environ, start_response):
 
-    # load config file
+    # load config
     with open('junos_exporter.yaml', 'r') as f:
         config = yaml.load(f)
 

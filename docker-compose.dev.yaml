@@ -1,0 +1,17 @@
+server:
+  restart: always
+  image: nginx
+  volumes:
+    - ./server/conf.d:/etc/nginx/conf.d
+  links:
+    - web:web
+  ports:
+    - "9665:80"
+
+web:
+  build: ./app
+  volumes:
+    - ./junos_exporter.yaml:/junos_exporter.yaml
+  expose:
+    - "8000"
+  command: gunicorn app:app -b :8000 --name app --log-level=debug --log-file=- -w 12 --max-requests 10 -k eventlet
