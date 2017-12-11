@@ -329,8 +329,10 @@ def get_route_engine_metrics(registry, dev):
             registry.add_metric('chassisTemp', temp_element.attrib['celsius'], {**meta, **{'fahrenheit': temp_f}})
 
             # cpu temp
-            temp_f = route_engine.find('cpu-temperature').text.strip().split('/')[1].split(' ')[1]
-            registry.add_metric('cpuTemp', route_engine.find('cpu-temperature').attrib['celsius'], {**meta, **{'fahrenheit': temp_f}})
+            temp_f = route_engine.find('cpu-temperature')
+            if temp_f is not None:
+                temp_f = temp_f.text.strip().split('/')[1].split(' ')[1]
+                registry.add_metric('cpuTemp', route_engine.find('cpu-temperature').attrib['celsius'], {**meta, **{'fahrenheit': temp_f}})
 
         # cpu
         cpu_user = route_engine.find('cpu-user').text.strip()
