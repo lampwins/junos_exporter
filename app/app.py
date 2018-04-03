@@ -110,6 +110,20 @@ def get_interface_metrics(registry, dev):
     registry.register('ifaceOutputDrops', 'gauge')
     registry.register('ifaceCarrierTransitions', 'gauge')
     registry.register('ifaceUp', 'gauge')
+    registry.register('ifaceInputFramingErrors', 'gauge')
+    registry.register('ifaceInputRunts', 'gauge')
+    registry.register('ifaceInputDiscards', 'gauge')
+    registry.register('ifaceInputL3Incompletes', 'gauge')
+    registry.register('ifaceInputL2ChannelErrors', 'gauge')
+    registry.register('ifaceInputL2MismatchTimeouts', 'gauge')
+    registry.register('ifaceInputFIFOErrors', 'gauge')
+    registry.register('ifaceInputResourceErrors', 'gauge')
+    registry.register('ifaceOutputCollisions', 'gauge')
+    registry.register('ifaceOutputAgedPackets', 'gauge')
+    registry.register('ifaceOutputMTUErrors', 'gauge')
+    registry.register('ifaceOutputHSLinkCRCErrors', 'gauge')
+    registry.register('ifaceOutputFIFOErrors', 'gauge')
+    registry.register('ifaceOutputResourceErrors', 'gauge')
 
     # interface metics
     for interface in interface_information.findall('physical-interface'):
@@ -185,6 +199,104 @@ def get_interface_metrics(registry, dev):
             registry.add_metric('ifaceCarrierTransitions', output_carrier_transitions.text, {'ifName': interface_name})
         else:
             registry.add_metric('ifaceCarrierTransitions', 0.0, {'ifName': interface_name})
+
+        # input framing errors
+        input_framing_errors = interface.find('input-error-list/framing-errors')
+        if input_framing_errors is not None:
+            registry.add_metric('ifaceInputFramingErrors', input_framing_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputFramingErrors', 0.0, {'ifName': interface_name})
+
+        # input discards
+        input_discards = interface.find('input-error-list/input-discards')
+        if input_discards is not None:
+            registry.add_metric('ifaceInputDiscards', input_discards.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputDiscards', 0.0, {'ifName': interface_name})
+
+        # input runts
+        input_runts = interface.find('input-error-list/input-runts')
+        if input_runts is not None:
+            registry.add_metric('ifaceInputRunts', input_runts.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputRunts', 0.0, {'ifName': interface_name})
+
+        # input L3 incompletes
+        input_l3_incompletes = interface.find('input-error-list/input-l3-incompletes')
+        if input_l3_incompletes is not None:
+            registry.add_metric('ifaceInputL3Incompletes', input_l3_incompletes.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputL3Incompletes', 0.0, {'ifName': interface_name})
+
+        # input l2-channel-errors
+        input_l2_channel_errors = interface.find('input-error-list/input-l2-channel-errors')
+        if input_l2_channel_errors is not None:
+            registry.add_metric('ifaceInputL2ChannelErrors', input_l2_channel_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputL2ChannelErrors', 0.0, {'ifName': interface_name})
+
+        # input l2-mismatch-timeouts
+        input_l2_mismatch_timeouts = interface.find('input-error-list/input-l2-mismatch-timeouts')
+        if input_l2_mismatch_timeouts is not None:
+            registry.add_metric('ifaceInputL2MismatchTimeouts', input_l2_mismatch_timeouts.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputL2MismatchTimeouts', 0.0, {'ifName': interface_name})
+
+        # input fifo-errors
+        input_fifo_errors = interface.find('input-error-list/input-fifo-errors')
+        if input_fifo_errors is not None:
+            registry.add_metric('ifaceInputFIFOErrors', input_fifo_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputFIFOErrors', 0.0, {'ifName': interface_name})
+
+        # input resource-errors
+        input_resource_errors = interface.find('input-error-list/input-resource-errors')
+        if input_resource_errors is not None:
+            registry.add_metric('ifaceInputResourceErrors', input_resource_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceInputResourceErrors', 0.0, {'ifName': interface_name})
+
+        # output collisions
+        output_collisions = interface.find('output-error-list/output-collisions')
+        if output_collisions is not None:
+            registry.add_metric('ifaceOutputCollisions', output_collisions.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceOutputCollisions', 0.0, {'ifName': interface_name})
+
+        # output aged-packets
+        output_aged_packets = interface.find('output-error-list/aged-packets')
+        if output_aged_packets is not None:
+            registry.add_metric('ifaceOutputAgedPackets', output_aged_packets.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceOutputAgedPackets', 0.0, {'ifName': interface_name})
+
+        # output mtu-errors
+        output_mtu_errors = interface.find('output-error-list/mtu-errors')
+        if output_mtu_errors is not None:
+            registry.add_metric('ifaceOutputMTUErrors', output_mtu_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceOutputMTUErrors', 0.0, {'ifName': interface_name})
+
+        # output hs-link-crc-errors
+        output_hs_link_crc_errors = interface.find('output-error-list/hs-link-crc-errors')
+        if output_hs_link_crc_errors is not None:
+            registry.add_metric('ifaceOutputHSLinkCRCErrors', output_hs_link_crc_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceOutputHSLinkCRCErrors', 0.0, {'ifName': interface_name})
+
+        # output fifo-errors
+        output_fifo_errors = interface.find('output-error-list/output-fifo-errors')
+        if output_fifo_errors is not None:
+            registry.add_metric('ifaceOutputFIFOErrors', output_fifo_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceOutputFIFOErrors', 0.0, {'ifName': interface_name})
+
+        # output resource-errors
+        output_resource_errors = interface.find('output-error-list/output-resource-errors')
+        if output_resource_errors is not None:
+            registry.add_metric('ifaceOutputResourceErrors', output_resource_errors.text, {'ifName': interface_name})
+        else:
+            registry.add_metric('ifaceOutputResourceErrors', 0.0, {'ifName': interface_name})
 
         # logical interfaces
         for logical_interface in interface.findall('logical-interface'):
