@@ -352,8 +352,12 @@ def get_route_engine_metrics(registry, dev):
         registry.add_metric('memoryUsage', route_engine.find('memory-buffer-utilization').text.strip(), meta)
 
         # time
-        registry.add_metric('startTime', route_engine.find('start-time').attrib['seconds'], meta)
-        registry.add_metric('upTime', route_engine.find('up-time').attrib['seconds'], meta)
+        start_time = route_engine.find('start-time')
+        if start_time:
+            registry.add_metric('startTime', start_time.attrib['seconds'], meta)
+        up_time = route_engine.find('up-time')
+        if up_time:
+            registry.add_metric('upTime', up_time.attrib['seconds'], meta)
 
 
 def get_storage_metrics(registry, dev):
