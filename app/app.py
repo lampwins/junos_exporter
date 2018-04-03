@@ -395,6 +395,7 @@ def get_bgp_metrics(registry, dev):
     # Based on the order in which states are defined in the
     # BGP FSA in RFC4271 section 8.2.2
     _peer_state_values = {
+        'NoState': 0
         'Idle': 1,
         'Connect': 2,
         'Active': 3,
