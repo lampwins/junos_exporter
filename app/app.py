@@ -465,10 +465,10 @@ def get_route_engine_metrics(registry, dev):
 
         # time
         start_time = route_engine.find('start-time')
-        if start_time:
+        if start_time is not None:
             registry.add_metric('startTime', start_time.attrib['seconds'], meta)
         up_time = route_engine.find('up-time')
-        if up_time:
+        if up_time is not None:
             registry.add_metric('upTime', up_time.attrib['seconds'], meta)
 
 
