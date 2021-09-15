@@ -30,7 +30,7 @@ systemctl start junos_exporter
 5. (optional) Tune as needed
 
 ## Config file
-The config should be located in `/etc/junos_exporter/junos_exporter.yaml`. An example that you can copy is locaed in `junos_exporter.example.yaml`. It should look something like this:
+The config should be located in `/etc/junos_exporter/junos_exporter.yaml`. An example that you can copy is located in `junos_exporter.example.yaml`. It should look something like this:
 ```yaml
 ---
 default:
